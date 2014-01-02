@@ -4,6 +4,7 @@
 require 'vendor/autoload.php';
 use OpenCloud\Rackspace;
 use OpenCloud\Compute\Constants\Network;
+use OpenCloud\Compute\Constants\ServerState;
 
 // Set the timezone
 date_default_timezone_set('America/Chicago');
@@ -66,4 +67,26 @@ try {
 
     printf('Status: %s\nBody: %s\nHeaders: %s\n', $statusCode, $responseBody, implode(', ', $headers));
 }
+
+
+// Wait for the server to finish
+$callback = function($server) {
+    if(!empty($server->error)) {
+        var_dump($server->error);
+	exit;
+    } else {
+        echo sprintf("Waiting on %s/%-12s %4s%%\n", 
+                     $server->name(), 
+		     $server->status(), 
+		     isset($server->progress) ? $server->progress : 0 
+	     );
+    }
+};
+$newserver = $server->waitFor(ServerState::ACTIVE, 600, $callback);
+
+
+// Print out the results
+printf("Server name: %s\n", $server->name);
+printf("Server ip address: %s\n", $server->accessIPv4);
+printf("Server admin password: %s\n", $server->adminPass);
 ?>
