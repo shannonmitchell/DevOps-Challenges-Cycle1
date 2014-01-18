@@ -33,7 +33,7 @@ $compute = $client->computeService('cloudServersOpenStack', $datacenter);
 $images = $compute->imageList();
 while ($image = $images->next()) {
     if($image->name == $imagename) {
-        printf("%s\n", $image->name);
+        printf("Found Image (%s)\n", $image->name);
 	$foundimage = $image;
     }
 }
@@ -42,7 +42,7 @@ while ($image = $images->next()) {
 $flavors = $compute->flavorList();
 while ($flavor = $flavors->next()) {
     if($flavor->name == $flavorname) {
-        printf("%s\n", $flavor->name);
+        printf("Found Flavor (%s)\n", $flavor->name);
 	$foundflavor = $flavor;
     }
 }
@@ -89,4 +89,6 @@ $newserver = $server->waitFor(ServerState::ACTIVE, 600, $callback);
 printf("Server name: %s\n", $server->name);
 printf("Server ip address: %s\n", $server->accessIPv4);
 printf("Server admin password: %s\n", $server->adminPass);
+
+
 ?>
