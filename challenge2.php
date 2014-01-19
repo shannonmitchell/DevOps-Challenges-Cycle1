@@ -57,10 +57,22 @@ $keyname = "challenge2";
 // Get the compute object
 $compute = $client->computeService('cloudServersOpenStack', $datacenter);
 
-// Create a Keypair
-//$keypair = $compute->keypair();
-//$keypair->setName($keyname);
-//$keypair->create(array('data' => $keytext));
+// Update or create a new keypair
+$keypairs = $compute->listKeypairs();
+$keypairexists = 0;
+while ($curkeypair = $keypairs->next()) {
+    if($curkeypair->getName() == $keyname) {
+	$keypairexists = 1;
+	printf("Removing conflicting keypair with name of %s\n", $keyname);
+	$curkeypair->delete();
+    }
+}
+// Create a new Keypair
+printf("Creating new keypair with name of %s and value of %s\n", $keyname, $keytext);
+$keypair = $compute->keypair();
+$keypair->setName($keyname);
+$keypair->create(array('publicKey' => $keytext));
+
 
 // Get the image
 $images = $compute->imageList();
@@ -93,7 +105,7 @@ try {
             $compute->network(Network::RAX_PRIVATE)
         ),
 	'keypair' => array(
-	    'name'  => "challenge2",
+	    'name'  => $keyname,
         ),
     ));
 } catch (\Guzzle\Http\Exception\BadResponseException $e) {
