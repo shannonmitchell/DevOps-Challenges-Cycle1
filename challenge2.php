@@ -58,9 +58,9 @@ $keyname = "challenge2";
 $compute = $client->computeService('cloudServersOpenStack', $datacenter);
 
 // Create a Keypair
-$keypair = $compute->keypair();
-$keypair->setName($keyname);
-$keypair->create(array('data' => $keytext));
+//$keypair = $compute->keypair();
+//$keypair->setName($keyname);
+//$keypair->create(array('data' => $keytext));
 
 // Get the image
 $images = $compute->imageList();
@@ -88,14 +88,13 @@ try {
         'name'     => $servername,
         'image'    => $foundimage,
         'flavor'   => $foundflavor,
-	'keypair'  => array(
-	    'name' => $keyname, 
-	    'publicKey' => file_get_contents($mykeyfile)
-        ),
         'networks' => array(
             $compute->network(Network::RAX_PUBLIC),
             $compute->network(Network::RAX_PRIVATE)
-        )
+        ),
+	'keypair' => array(
+	    'name'  => "challenge2",
+        ),
     ));
 } catch (\Guzzle\Http\Exception\BadResponseException $e) {
     $responseBody = (string) $e->getResponse()->getBody();
