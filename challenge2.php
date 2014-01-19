@@ -34,10 +34,25 @@ if (file_exists($key_file)) {
 // Make sure the file exists and get its contents
 if(!file_exists($mykeyfile)) {
     printf("Public key file (%s) doesn't exist\n", $mykeyfile);
-    exit(0);
+    exit(255);
 } else {
     $keytext = file_get_contents($mykeyfile);
 }
+
+
+// Get the servername prefix and number of servers
+printf("Please enter a servername: ");
+$servername = rtrim(fgets(STDIN));
+
+printf("Please enter in a value from 1 to 3 for the number of servers you would like to spin up: ");
+$servercount = intval(rtrim(fgets(STDIN)));
+if($servercount < 1 || $servercount > 3) {
+    printf("Server count must be a value from 1 to 3.\n");
+    exit(255);
+}
+
+
+//return 1;
 
 
 
@@ -51,7 +66,7 @@ $client = new Rackspace(Rackspace::US_IDENTITY_ENDPOINT, array(
 $datacenter = "ORD";
 $imagename = "Fedora 19 (Schrodinger's Cat)";
 $flavorname = "512MB Standard Instance";
-$servername = "challenge2";
+//$servername = "challenge2";
 $keyname = "challenge2";
 
 // Get the compute object
@@ -92,50 +107,67 @@ while ($flavor = $flavors->next()) {
     }
 }
 
-// Create the serever
-$server = $compute->server();
+// Start server creation loop
+for($x = 1; $x <= $servercount; $x++) {
 
-try {
-    $response = $server->create(array(
-        'name'     => $servername,
-        'image'    => $foundimage,
-        'flavor'   => $foundflavor,
-        'networks' => array(
-            $compute->network(Network::RAX_PUBLIC),
-            $compute->network(Network::RAX_PRIVATE)
-        ),
-	'keypair' => array(
-	    'name'  => $keyname,
-        ),
-    ));
-} catch (\Guzzle\Http\Exception\BadResponseException $e) {
-    $responseBody = (string) $e->getResponse()->getBody();
-    $statusCode = $e->getResponse()->getStatusCode();
-    $headers = $e->getResponse()->getHeaderLines();
+    // Set the name
+    $curname = sprintf("%s%d", $servername, $x);
 
-    printf('Status: %s\nBody: %s\nHeaders: %s\n', $statusCode, $responseBody, implode(', ', $headers));
-}
+    // Create the serever
+    $server[$x] = $compute->server();
 
+    try {
+        $response = $server[$x]->create(array(
+            'name'     => $curname,
+            'image'    => $foundimage,
+            'flavor'   => $foundflavor,
+            'networks' => array(
+                $compute->network(Network::RAX_PUBLIC),
+                $compute->network(Network::RAX_PRIVATE)
+            ),
+	    'keypair' => array(
+	        'name'  => $keyname,
+            ),
+        ));
+    } catch (\Guzzle\Http\Exception\BadResponseException $e) {
+        $responseBody = (string) $e->getResponse()->getBody();
+        $statusCode = $e->getResponse()->getStatusCode();
+        $headers = $e->getResponse()->getHeaderLines();
 
-// Wait for the server to finish
-$callback = function($server) {
-    if(!empty($server->error)) {
-        var_dump($server->error);
-	exit;
-    } else {
-        echo sprintf("Waiting on %s/%-12s %4s%%\n", 
-                     $server->name(), 
-		     $server->status(), 
-		     isset($server->progress) ? $server->progress : 0 
-	     );
+        printf('Status: %s\nBody: %s\nHeaders: %s\n', $statusCode, $responseBody, implode(', ', $headers));
     }
-};
-$newserver = $server->waitFor(ServerState::ACTIVE, 600, $callback);
+
+} // end server creation loop
 
 
-// Print out the results
-printf("Server name: %s\n", $server->name);
-printf("Server ip address: %s\n", $server->accessIPv4);
-printf("Server admin password: %s\n", $server->adminPass);
+
+
+// Start server wait loop
+for($x = 1; $x <= $servercount; $x++) {
+
+    // Wait for the server to finish
+    $callback = function($server) {
+        if(!empty($server->error)) {
+            var_dump($server->error);
+    	    exit(255);
+        } else {
+            echo sprintf("Waiting on %s/%-12s %4s%%\n", 
+                         $server->name(), 
+	    	         $server->status(), 
+		         isset($server->progress) ? $server->progress : 0 
+	         );
+        }
+    };
+    $newserver[$x] = $server[$x]->waitFor(ServerState::ACTIVE, 600, $callback);
+} // end server wait loop
+
+
+// Start server print loop
+for($x = 1; $x <= $servercount; $x++) {
+    // Print out the results
+    printf("Server name: %s\n", $server[$x]->name);
+    printf("Server ip address: %s\n", $server[$x]->accessIPv4);
+    printf("Server admin password: %s\n", $server[$x]->adminPass);
+} // end server print loopo
 
 ?>
