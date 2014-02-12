@@ -8,7 +8,7 @@ define('RAXSDK_VOLUME_REGION',$datacenter);
 require 'vendor/autoload.php';
 use OpenCloud\Rackspace;
 use OpenCloud\Compute\Constants\Network;
-use OpenCloud\Rackspace\Compute\Constants\ServerState;
+use OpenCloud\Compute\Constants\ServerState;
 
 // Set the timezone
 date_default_timezone_set('America/Chicago');
