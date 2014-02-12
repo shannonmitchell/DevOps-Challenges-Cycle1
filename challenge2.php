@@ -82,6 +82,7 @@ while ($curkeypair = $keypairs->next()) {
 	$curkeypair->delete();
     }
 }
+
 // Create a new Keypair
 printf("Creating new keypair with name of %s and value of %s\n", $keyname, $keytext);
 $keypair = $compute->keypair();
